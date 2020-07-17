@@ -305,9 +305,12 @@ def parallel_annotate_to_bed(opts, trans_provided_no_acc, process_num):
     fp.close()
 
 
-def t_annotate(file_in, file_out, annotation):
-    am, hp, hn, hdp = annotator(annotation)
-    df = pd.read_csv(file_in, sep='\t', header=None)
+def t_annotate(opts):
+    am, hp, hn, hdp = annotator(opts.annotation)
+    if opts.file_format == 'excel':
+        df = pd.read_excel(opts.file_in, header=None)
+    else:
+        df = pd.read_csv(opts.file_in, sep='\t', header=None)
     df.columns = ['Input Variant']
     df['Input Variant'] = df['Input Variant'].str.replace(' ', '', regex=True)
     df['g.'] = '.'
@@ -372,12 +375,15 @@ def t_annotate(file_in, file_out, annotation):
     df['#Chr'] = df['#Chr'].str.extract(r'NC_0+(\d+)\.\d+')
     df.fillna(value={'#Chr': '.'}, inplace=True)
     df.replace({'#Chr': {'23': 'X', '24': 'Y'}}, inplace=True)
-    df.to_csv(file_out, sep='\t', index=False)
+    df.to_csv(opts.file_out, sep='\t', index=False)
 
 
-def g_annotate(file_in, file_out, annotation):
-    am, hp, hn, hdp = annotator(annotation)
-    df = pd.read_csv(file_in, sep='\t', header=None)
+def g_annotate(opts):
+    am, hp, hn, hdp = annotator(opts.annotation)
+    if opts.file_format == 'excel':
+        df = pd.read_excel(opts.file_in, header=None)
+    else:
+        df = pd.read_csv(opts.file_in, sep='\t', header=None)
     df.columns = ['Input Variant']
     df['Input Variant'] = df['Input Variant'].str.replace(' ', '', regex=True)
     df['#Chr'] = '.'
@@ -435,12 +441,15 @@ def g_annotate(file_in, file_out, annotation):
     df['#Chr'] = df['#Chr'].str.extract(r'NC_0+(\d+)\.\d+')
     df.fillna(value={'#Chr': '.'}, inplace=True)
     df.replace({'#Chr': {'23': 'X', '24': 'Y'}}, inplace=True)
-    df.to_csv(file_out, sep='\t', index=False)
+    df.to_csv(opts.file_out, sep='\t', index=False)
 
 
-def gene_c_annotate(file_in, file_out, annotation):
-    am, hp, hn, hdp = annotator(annotation)
-    df = pd.read_csv(file_in, sep='\t', header=None)
+def gene_c_annotate(opts):
+    am, hp, hn, hdp = annotator(opts.annotation)
+    if opts.file_format == 'excel':
+        df = pd.read_excel(opts.file_in, header=None)
+    else:
+        df = pd.read_csv(opts.file_in, sep='\t', header=None)
     df.columns = ['gene', 'c.']
     df.replace(' ', '', regex=True, inplace=True)
     annotate_res = list()
@@ -508,7 +517,7 @@ def gene_c_annotate(file_in, file_out, annotation):
     annotate_df['#Chr'] = annotate_df['#Chr'].str.extract(r'NC_0+(\d+)\.\d+')
     annotate_df.fillna(value={'#Chr': '.'}, inplace=True)
     annotate_df.replace({'#Chr': {'23': 'X', '24': 'Y'}}, inplace=True)
-    annotate_df.to_csv(file_out, sep='\t', index=False)
+    annotate_df.to_csv(opts.file_out, sep='\t', index=False)
 
 
 def main():
@@ -530,11 +539,11 @@ def main():
         trans_provided = trans_df[0].values.tolist()
         trans_provided_no_acc = remove_trans_acc(trans_provided)
     if opts.input_type == 'c':
-        t_annotate(opts.file_in, opts.file_out, opts.annotation)
+        t_annotate(opts)
     elif opts.input_type == 'g':
-        g_annotate(opts.file_in, opts.file_out, opts.annotation)
+        g_annotate(opts)
     elif opts.input_type == 'gene_c':
-        gene_c_annotate(opts.file_in, opts.file_out, opts.annotation)
+        gene_c_annotate(opts)
     else:
         process_num = min(opts.processes, cpu_count())
         serial_annotate_to_bed(opts, trans_provided_no_acc) if process_num == 1 else parallel_annotate_to_bed(opts, trans_provided_no_acc, process_num)
