@@ -313,6 +313,7 @@ def t_annotate(opts):
         df = pd.read_csv(opts.file_in, sep='\t', header=None)
     df.columns = ['Input Variant']
     df['Input Variant'] = df['Input Variant'].str.replace(' ', '', regex=True)
+    df['Normalise'] = '.'
     df['g.'] = '.'
     df['#Chr'] = '.'
     df['Start'] = '.'
@@ -324,6 +325,7 @@ def t_annotate(opts):
     for i in range(df.shape[0]):
         try:
             var_c = hp.parse_hgvs_variant(df.loc[i, 'Input Variant'])
+            df.loc[i, 'Normalise'] = str(hn.normalize(var_c))
             var_g = am.t_to_g(var_c)
         except (HGVSError, HGVSParseError, HGVSUsageError, NotImplementedError, IndexError) as e:
             df.loc[i, 'State'] = str(e)
